@@ -1,0 +1,327 @@
+import { useState, useMemo } from 'react';
+import { 
+  TrendingUp, 
+  TrendingDown, 
+  AlertTriangle, 
+  CheckCircle2, 
+  Sprout, 
+  Corn, 
+  CloudRain, 
+  DollarSign,
+  Info,
+  Layers,
+  Map as MapIcon,
+  Home
+} from 'lucide-react';
+import { motion } from 'motion/react';
+import { calculateQuimiasX, AgroParams } from './logic/agroEngine';
+import { LandingPage } from './components/LandingPage';
+
+const INITIAL_PARAMS: AgroParams = {
+  cicloDias: 85,
+  elotesDiariosMeta: 1770,
+  elotesPorMata: 1.17,
+  distanciaSurcosCm: 45,
+  distanciaMatasCm: 22,
+  largoSurcoM: 100,
+  precioElote: 8,
+  costoKgSemilla: 120,
+  costoKgUrea: 15,
+  costoKgSulfatoMg: 25,
+  costoMCintilla: 2.5,
+  costoJornalDia: 450,
+  jornalesPorBloque: 40,
+  costosFijosBloque: 15000
+};
+
+export default function App() {
+  const [view, setView] = useState<'landing' | 'dashboard'>('landing');
+  const [actualValues, setActualValues] = useState({
+    yieldPerBlock: 11500, // Real result from Tepic
+    totalCosts: 52000,   // Real spending
+    actualPrice: 7.5,    // Market price achieved
+    germinationRate: 0.85 
+  });
+
+  const prediction = useMemo(() => calculateQuimiasX(INITIAL_PARAMS), []);
+  
+  const actualProfit = useMemo(() => {
+    return (actualValues.yieldPerBlock * actualValues.actualPrice) - actualValues.totalCosts;
+  }, [actualValues]);
+
+  const yieldDiscrepancy = ((actualValues.yieldPerBlock - prediction.elotesPorBloque) / prediction.elotesPorBloque) * 100;
+  const costDiscrepancy = ((actualValues.totalCosts - prediction.costoTotalBloque) / prediction.costoTotalBloque) * 100;
+  const actualROI = (actualProfit / actualValues.totalCosts) * 100;
+  const profitMargin = (actualProfit / (actualValues.yieldPerBlock * actualValues.actualPrice)) * 100;
+
+  if (view === 'landing') {
+    return <LandingPage onEnterApp={() => setView('dashboard')} />;
+  }
+
+  return (
+    <div className="w-full h-screen bg-[#f8fafc] font-sans text-slate-900 flex flex-col overflow-hidden">
+      {/* Top Navigation */}
+      <nav className="h-16 bg-brand-green-900 text-white flex items-center justify-between px-8 shrink-0 shadow-md">
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setView('landing')}
+            className="w-8 h-8 bg-brand-green-200 rounded-lg flex items-center justify-center hover:scale-105 transition-transform"
+          >
+            <Home size={14} className="text-brand-green-900" />
+          </button>
+          <span className="text-xl font-bold tracking-tight italic">
+            AgroVision 3D <span className="font-light opacity-70 italic">| Dashboard Beta</span>
+          </span>
+        </div>
+        <div className="flex items-center gap-6">
+          <div className="text-right hidden sm:block">
+            <p className="text-[10px] uppercase tracking-widest opacity-70">Clima Tepic, Nayarit</p>
+            <p className="text-sm font-semibold italic flex items-center gap-2">
+              <CloudRain size={14} className="text-brand-green-300" /> 22°C • Lluvia (Mayo)
+            </p>
+          </div>
+          <div className="w-10 h-10 rounded-full bg-brand-green-700 border-2 border-brand-green-200 flex items-center justify-center overflow-hidden">
+             <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="User" />
+          </div>
+        </div>
+      </nav>
+
+      {/* Main Content Grid */}
+      <div className="flex-1 grid grid-cols-12 gap-4 p-4 overflow-hidden">
+        
+        {/* LEFT COLUMN: 3D Visualization & Major Stats */}
+        <div className="col-span-12 lg:col-span-8 flex flex-col gap-4 overflow-hidden">
+          
+          {/* 3D Viewer Card */}
+          <div className="flex-1 bg-white rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden flex flex-col">
+            <div className="absolute top-4 left-4 z-10 bg-white/90 backdrop-blur px-3 py-1.5 rounded-full border border-slate-200 text-[11px] font-bold uppercase tracking-tighter text-brand-green-900 flex items-center gap-2">
+              <MapIcon size={12} /> Vista de Terreno: 2.0 Ha (Tepic Norte)
+            </div>
+            <div className="absolute top-4 right-4 z-10 flex gap-2">
+              <button className="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded text-[10px] font-bold uppercase transition-colors">Relieve</button>
+              <button className="px-3 py-1 bg-brand-green-700 text-white rounded text-[10px] font-bold uppercase transition-colors">Satélite</button>
+            </div>
+            
+            {/* Isometric Field Simulation */}
+            <div className="flex-1 bg-slate-100 relative flex items-center justify-center overflow-hidden">
+              <div className="w-[500px] h-[300px] relative isometric-field">
+                <div className="grid grid-cols-4 grid-rows-3 gap-2 w-full h-full p-2 bg-stone-800/10">
+                  {/* The Blocks - Representing the staggered modules */}
+                  <div className="bg-yellow-400 border-b-4 border-yellow-600 rounded shadow-lg flex items-center justify-center text-yellow-900 font-bold text-[10px] isometric-block">BLOQUE 1</div>
+                  <div className="bg-brand-green-700 border-b-4 border-brand-green-900 rounded shadow-lg isometric-block"></div>
+                  <div className="bg-brand-green-500 border-b-4 border-brand-green-700 rounded shadow-lg isometric-block"></div>
+                  <div className="bg-brand-green-300 border-b-4 border-brand-green-500 rounded shadow-lg isometric-block"></div>
+                  <div className="bg-brand-green-200 border-b-4 border-brand-green-300 rounded shadow-lg isometric-block"></div>
+                  <div className="bg-brand-green-100 border-b-4 border-brand-green-200 rounded shadow-lg isometric-block"></div>
+                  <div className="bg-stone-500 border-b-4 border-stone-700 rounded shadow-lg opacity-40 italic flex items-center justify-center text-[8px]">MAYO</div>
+                  <div className="bg-stone-500 border-b-4 border-stone-700 rounded shadow-lg opacity-20"></div>
+                  <div className="bg-white/40 border-2 border-dashed border-white/60 rounded"></div>
+                  <div className="bg-white/40 border-2 border-dashed border-white/60 rounded"></div>
+                  <div className="bg-white/40 border-2 border-dashed border-white/60 rounded"></div>
+                  <div className="bg-white/40 border-2 border-dashed border-white/60 rounded"></div>
+                </div>
+              </div>
+              
+              {/* Legend Overlay */}
+              <div className="absolute bottom-6 right-6 flex flex-col gap-2 bg-white/80 backdrop-blur p-3 rounded-lg text-[10px] shadow-sm border border-slate-200">
+                <div className="flex items-center gap-2"><div className="w-3 h-3 bg-yellow-400"></div><span className="font-bold">COSECHA ACTIVA</span></div>
+                <div className="flex items-center gap-2"><div className="w-3 h-3 bg-brand-green-700"></div><span className="font-bold">MADURACIÓN</span></div>
+                <div className="flex items-center gap-2"><div className="w-3 h-3 bg-brand-green-200"></div><span className="font-bold">CRECIMIENTO</span></div>
+                <div className="flex items-center gap-2"><div className="w-3 h-3 bg-stone-400"></div><span className="font-bold">PREPARACIÓN</span></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Predicted Stats Cards */}
+          <div className="h-40 flex gap-4 shrink-0 overflow-x-auto pb-2">
+            <div className="flex-1 min-w-[200px] bg-brand-green-800 text-white p-5 rounded-2xl flex flex-col justify-between shadow-lg shadow-emerald-900/10">
+              <p className="text-[11px] uppercase tracking-widest font-semibold opacity-70 italic">Producción Real Estimada</p>
+              <div>
+                <h3 className="text-4xl font-black tabular-nums tracking-tighter">{actualValues.yieldPerBlock.toLocaleString()}</h3>
+                <p className="text-sm italic text-brand-green-300">Elotes Calidad Tepic</p>
+              </div>
+            </div>
+            <div className="flex-1 min-w-[200px] bg-white border border-slate-200 p-5 rounded-2xl flex flex-col justify-between shadow-sm">
+              <p className="text-[11px] uppercase tracking-widest font-semibold text-slate-500 italic">Meta Diaria Quimias X</p>
+              <div>
+                <h3 className="text-4xl font-black tabular-nums tracking-tighter text-brand-green-900">{INITIAL_PARAMS.elotesDiariosMeta.toLocaleString()}</h3>
+                <p className="text-sm italic text-slate-400 uppercase tracking-tighter font-bold">Continuidad: 50.7 Días</p>
+              </div>
+            </div>
+            <div className="flex-1 min-w-[200px] bg-accent-yellow-100 border border-yellow-200 p-5 rounded-2xl flex flex-col justify-between shadow-sm">
+              <p className="text-[11px] uppercase tracking-widest font-semibold text-yellow-800 italic">Estado Bloque Actual</p>
+              <div className="flex items-end justify-between">
+                <div>
+                  <h3 className="text-3xl font-black tracking-tighter text-yellow-700 uppercase italic">Activo</h3>
+                  <p className="text-sm italic text-yellow-600 font-bold uppercase text-[10px]">Cosecha: 24 Surcos</p>
+                </div>
+                <div className="w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center shadow-inner text-xl">
+                  🌽
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT COLUMN: Real Data Input & Timeline */}
+        <div className="col-span-12 lg:col-span-4 flex flex-col gap-4 overflow-y-auto pr-1">
+          
+          {/* Inputs & Profitability Card */}
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <p className="text-[11px] uppercase tracking-widest font-bold text-slate-400 mb-6 flex items-center justify-between">
+              Calibración Beta: Elotón Pro <span>Tepic Mayo</span>
+            </p>
+            
+            <div className="space-y-5">
+              {/* Inputs */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Cosecha Real (Elotes)</label>
+                  <input 
+                    type="number" 
+                    value={actualValues.yieldPerBlock}
+                    onChange={(e) => setActualValues({...actualValues, yieldPerBlock: Number(e.target.value)})}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-lg font-bold text-brand-green-900 focus:outline-none focus:ring-2 focus:ring-brand-green-500/20"
+                  />
+                  <div className={`text-[10px] font-bold mt-1 uppercase ${yieldDiscrepancy < 0 ? 'text-red-500' : 'text-emerald-600'}`}>
+                    Desvío: {yieldDiscrepancy.toFixed(1)}% {yieldDiscrepancy < 0 ? <TrendingDown size={10} className="inline ml-1" /> : <TrendingUp size={10} className="inline ml-1" />}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Inversión ($)</label>
+                  <input 
+                    type="number" 
+                    value={actualValues.totalCosts}
+                    onChange={(e) => setActualValues({...actualValues, totalCosts: Number(e.target.value)})}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-md font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-green-500/20"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Precio Venta ($)</label>
+                  <input 
+                    type="number" 
+                    step="0.1"
+                    value={actualValues.actualPrice}
+                    onChange={(e) => setActualValues({...actualValues, actualPrice: Number(e.target.value)})}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-md font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-green-500/20"
+                  />
+                </div>
+              </div>
+
+              {/* Profit Summary */}
+              <div className="pt-4 border-t border-slate-100">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-xs font-bold text-brand-green-900 uppercase italic">Utilidad Neta</span>
+                  <span className={`text-3xl font-black italic tracking-tighter ${actualProfit < 0 ? 'text-red-600' : 'text-brand-green-700'}`}>
+                    ${actualProfit.toLocaleString()}
+                  </span>
+                </div>
+                <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden flex">
+                   <div className="bg-brand-green-700 h-full transition-all duration-500" style={{ width: `${Math.max(0, Math.min(100, profitMargin))}%` }}></div>
+                </div>
+                <div className="flex justify-between mt-2 text-[10px] font-black text-slate-400 uppercase tracking-tighter">
+                  <span>MARGEN REAL: {profitMargin.toFixed(1)}%</span>
+                  <span>ROI LOGRADO: {actualROI.toFixed(1)}%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Staggered Timeline Card */}
+          <div className="flex-1 bg-white rounded-2xl border border-slate-200 p-6 flex flex-col shadow-sm">
+            <div className="flex justify-between items-center mb-6">
+              <p className="text-[11px] uppercase tracking-widest font-bold text-slate-400">Calendario Elotón v8</p>
+              <span className="text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded font-bold uppercase tracking-tighter flex items-center gap-1">
+                <AlertTriangle size={10} /> Alerta Lluvia Tepic
+              </span>
+            </div>
+            
+            <div className="flex-1 space-y-6">
+              {/* Block 1 */}
+              <div className="relative pl-4 border-l-2 border-yellow-400 pb-2">
+                <div className="absolute -left-[5px] top-0 w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">BLOQUE 1 • EN COSECHA</p>
+                <h4 className="text-sm font-bold">Corte: 28 Jul — 03 Ago</h4>
+                <div className="flex items-center gap-2 mt-1">
+                   <span className="text-[10px] bg-brand-green-100 text-brand-green-800 px-1.5 py-0.5 rounded font-bold uppercase">24 Surcos</span>
+                   <span className="text-[10px] text-slate-500 italic">~13,200 elotes est.</span>
+                </div>
+              </div>
+              
+              {/* Block 2 */}
+              <div className="relative pl-4 border-l-2 border-brand-green-900 pb-2">
+                <div className="absolute -left-[5px] top-0 w-2 h-2 rounded-full bg-brand-green-900"></div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">BLOQUE 2 • MADURACIÓN</p>
+                <h4 className="text-sm font-bold text-brand-green-900">Corte: 04 Ago — 10 Ago</h4>
+                <div className="w-full bg-slate-100 h-1.5 rounded-full mt-2 overflow-hidden">
+                  <div className="bg-brand-green-700 h-full" style={{ width: '75%' }}></div>
+                </div>
+              </div>
+
+              {/* Block 3 */}
+              <div className="relative pl-4 border-l-2 border-brand-green-500 pb-2">
+                <div className="absolute -left-[5px] top-0 w-2 h-2 rounded-full bg-brand-green-500"></div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">BLOQUE 3 • CRECIMIENTO</p>
+                <h4 className="text-sm font-bold text-slate-800">Corte: 11 Ago — 17 Ago</h4>
+                <p className="text-[10px] text-brand-green-700 font-black mt-2 uppercase flex items-center gap-1">
+                  <Layers size={10} /> Próximo Fertirriego: Día 50
+                </p>
+              </div>
+            </div>
+
+            <button className="w-full py-3 bg-brand-green-900 text-white rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-green-900/20 mt-6 hover:bg-brand-green-700 transition-all">
+              Planificar Siguiente Bloque
+            </button>
+          </div>
+
+          {/* Calibration Report / Discrepancies */}
+          <div className="bg-stone-900 text-white rounded-2xl p-6 shadow-xl border border-stone-800">
+            <h3 className="text-xs font-black uppercase tracking-widest text-brand-green-300 mb-4 flex items-center gap-2">
+              <AlertTriangle size={14} /> Reporte de Calibración
+            </h3>
+            
+            <div className="space-y-4 text-[11px] leading-relaxed">
+              <div className="border-l-2 border-orange-500 pl-3">
+                <p className="font-bold text-orange-400 uppercase tracking-tighter mb-1">Discrepancia de Rendimiento</p>
+                <p className="opacity-80 italic">
+                  Se detectó una merma del {Math.abs(yieldDiscrepancy).toFixed(1)}% vs predicción. Causa: Nubosidad persistente en Tepic redujo la fotosíntesis y el lixiviado de nitrógeno por lluvias intensas.
+                </p>
+              </div>
+
+              <div className="border-l-2 border-red-500 pl-3">
+                <p className="font-bold text-red-400 uppercase tracking-tighter mb-1">Impacto en Costos</p>
+                <p className="opacity-80 italic">
+                  Incremento del {costDiscrepancy.toFixed(1)}% en costos operativos. Causa: Mano de obra adicional para apertura de drenes de emergencia y aplicación de fungicida preventivo.
+                </p>
+              </div>
+
+              <div className="bg-white/5 p-4 rounded-xl border border-white/10 mt-4">
+                <p className="text-[10px] font-black text-brand-green-200 uppercase mb-2">Ajustes Sugeridos al Motor</p>
+                <ul className="space-y-2 list-disc pl-4 opacity-90">
+                  <li>Reducir <span className="font-bold">elotes_por_mata</span> a 1.05 durante temporada de lluvias.</li>
+                  <li>Incrementar reserva de <span className="font-bold">jornales_por_bloque</span> en un 15% para mantenimiento de drenaje.</li>
+                  <li>Implementar factor de corrección de fertilizante (+10% Urea) tras precipitaciones mayores a 50mm.</li>
+                </ul>
+              </div>
+            </div>
+            
+            <button className="w-full mt-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[10px] font-black uppercase tracking-widest transition-all">
+              Sincronizar Parámetros
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Utility Bar */}
+      <div className="h-12 bg-white border-t border-slate-200 flex items-center justify-center px-8 shrink-0">
+        <div className="flex gap-6 md:gap-12 overflow-x-auto no-scrollbar py-2">
+          <a href="#" className="text-[10px] font-black text-slate-400 uppercase hover:text-brand-green-700 tracking-tighter transition-colors shrink-0">Beta Test</a>
+          <a href="#" className="text-[10px] font-black text-brand-green-700 uppercase border-b-2 border-brand-green-700 pb-1 tracking-tighter shrink-0">Estrategia GTM</a>
+          <a href="#" className="text-[10px] font-black text-slate-400 uppercase hover:text-brand-green-700 tracking-tighter transition-colors shrink-0">Logística Elote</a>
+          <a href="#" className="text-[10px] font-black text-slate-400 uppercase hover:text-brand-green-700 tracking-tighter transition-colors shrink-0">Alertas Satélite</a>
+          <a href="#" className="text-[10px] font-black text-slate-400 uppercase hover:text-brand-green-700 tracking-tighter transition-colors shrink-0">Cerrar Sesión</a>
+        </div>
+      </div>
+    </div>
+  );
+}

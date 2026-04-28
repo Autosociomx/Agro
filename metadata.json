@@ -1,0 +1,12 @@
+{
+  "name": "AgroVision 3D",
+  "description": "Aplicación de agricultura de precisión para planificación 3D, cálculos de rendimiento y gestión financiera de cultivos como el elote.",
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "AI-powered crop diagnostics",
+    "3D terrain modeling",
+    "Financial profit tracking"
+  ]
+}
