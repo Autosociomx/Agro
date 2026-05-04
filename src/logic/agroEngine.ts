@@ -13,6 +13,8 @@ export interface AgroParams {
   costoJornalDia: number;
   jornalesPorBloque: number;
   costosFijosBloque: number;
+  superficie?: number;
+  cultivo?: string;
 }
 
 export interface AgroReport {

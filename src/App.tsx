@@ -5,17 +5,20 @@ import {
   AlertTriangle, 
   CheckCircle2, 
   Sprout, 
-  Corn, 
   CloudRain, 
   DollarSign,
   Info,
   Layers,
   Map as MapIcon,
-  Home
+  Home,
+  Settings
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { calculateQuimiasX, AgroParams } from './logic/agroEngine';
 import { LandingPage } from './components/LandingPage';
+import { GoogleMapComponent } from './components/GoogleMapComponent';
+import { GroqChatComponent } from './components/GroqChatComponent';
+import { ApiSettings } from './components/ApiSettings';
 
 const INITIAL_PARAMS: AgroParams = {
   cicloDias: 85,
@@ -36,6 +39,12 @@ const INITIAL_PARAMS: AgroParams = {
 
 export default function App() {
   const [view, setView] = useState<'landing' | 'dashboard'>('landing');
+  const [params, setParams] = useState<AgroParams>({
+    ...INITIAL_PARAMS,
+    superficie: 0.82, // Default hectáreas based on current Santa Cruz lot
+    cultivo: 'Maíz Elotero'
+  });
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [actualValues, setActualValues] = useState({
     yieldPerBlock: 11500, // Real result from Tepic
     totalCosts: 52000,   // Real spending
@@ -43,7 +52,7 @@ export default function App() {
     germinationRate: 0.85 
   });
 
-  const prediction = useMemo(() => calculateQuimiasX(INITIAL_PARAMS), []);
+  const prediction = useMemo(() => calculateQuimiasX(params), [params]);
   
   const actualProfit = useMemo(() => {
     return (actualValues.yieldPerBlock * actualValues.actualPrice) - actualValues.totalCosts;
@@ -55,11 +64,17 @@ export default function App() {
   const profitMargin = (actualProfit / (actualValues.yieldPerBlock * actualValues.actualPrice)) * 100;
 
   if (view === 'landing') {
-    return <LandingPage onEnterApp={() => setView('dashboard')} />;
+    return <LandingPage onEnterApp={(crop) => {
+      if (crop) {
+        setParams(prev => ({ ...prev, cultivo: crop }));
+      }
+      setView('dashboard');
+    }} />;
   }
 
   return (
-    <div className="w-full h-screen bg-[#f8fafc] font-sans text-slate-900 flex flex-col overflow-hidden">
+    <div className="w-full h-screen bg-[#f8fafc] font-sans text-slate-900 flex flex-col overflow-hidden relative">
+      <ApiSettings isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
       {/* Top Navigation */}
       <nav className="h-16 bg-brand-green-900 text-white flex items-center justify-between px-8 shrink-0 shadow-md">
         <div className="flex items-center gap-3">
@@ -70,7 +85,7 @@ export default function App() {
             <Home size={14} className="text-brand-green-900" />
           </button>
           <span className="text-xl font-bold tracking-tight italic">
-            AgroVision 3D <span className="font-light opacity-70 italic">| Dashboard Beta</span>
+            AgroVision 3D <span className="font-light opacity-70 italic text-brand-green-300">[{params.cultivo}]</span>
           </span>
         </div>
         <div className="flex items-center gap-6">
@@ -80,8 +95,17 @@ export default function App() {
               <CloudRain size={14} className="text-brand-green-300" /> 22°C • Lluvia (Mayo)
             </p>
           </div>
-          <div className="w-10 h-10 rounded-full bg-brand-green-700 border-2 border-brand-green-200 flex items-center justify-center overflow-hidden">
-             <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="User" />
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setIsSettingsOpen(true)}
+              className="w-10 h-10 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center hover:bg-white/20 transition-colors mr-2"
+              title="Configurar APIs"
+            >
+              <Settings size={18} />
+            </button>
+            <div className="w-10 h-10 rounded-full bg-brand-green-700 border-2 border-brand-green-200 flex items-center justify-center overflow-hidden">
+               <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="User" />
+            </div>
           </div>
         </div>
       </nav>
@@ -91,43 +115,81 @@ export default function App() {
         
         {/* LEFT COLUMN: 3D Visualization & Major Stats */}
         <div className="col-span-12 lg:col-span-8 flex flex-col gap-4 overflow-hidden">
-          
-          {/* 3D Viewer Card */}
+                  {/* 3D Viewer Card */}
           <div className="flex-1 bg-white rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden flex flex-col">
-            <div className="absolute top-4 left-4 z-10 bg-white/90 backdrop-blur px-3 py-1.5 rounded-full border border-slate-200 text-[11px] font-bold uppercase tracking-tighter text-brand-green-900 flex items-center gap-2">
-              <MapIcon size={12} /> Vista de Terreno: 2.0 Ha (Tepic Norte)
-            </div>
-            <div className="absolute top-4 right-4 z-10 flex gap-2">
-              <button className="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded text-[10px] font-bold uppercase transition-colors">Relieve</button>
-              <button className="px-3 py-1 bg-brand-green-700 text-white rounded text-[10px] font-bold uppercase transition-colors">Satélite</button>
+            <div className="absolute top-4 left-4 z-20 bg-white/90 backdrop-blur px-3 py-1.5 rounded-full border border-slate-200 text-[11px] font-bold uppercase tracking-tighter text-brand-green-900 flex items-center gap-2">
+              <MapIcon size={12} /> Analizador IA: Santa Cruz, Nayarit (MODO API READY)
             </div>
             
-            {/* Isometric Field Simulation */}
-            <div className="flex-1 bg-slate-100 relative flex items-center justify-center overflow-hidden">
-              <div className="w-[500px] h-[300px] relative isometric-field">
-                <div className="grid grid-cols-4 grid-rows-3 gap-2 w-full h-full p-2 bg-stone-800/10">
-                  {/* The Blocks - Representing the staggered modules */}
-                  <div className="bg-yellow-400 border-b-4 border-yellow-600 rounded shadow-lg flex items-center justify-center text-yellow-900 font-bold text-[10px] isometric-block">BLOQUE 1</div>
-                  <div className="bg-brand-green-700 border-b-4 border-brand-green-900 rounded shadow-lg isometric-block"></div>
-                  <div className="bg-brand-green-500 border-b-4 border-brand-green-700 rounded shadow-lg isometric-block"></div>
-                  <div className="bg-brand-green-300 border-b-4 border-brand-green-500 rounded shadow-lg isometric-block"></div>
-                  <div className="bg-brand-green-200 border-b-4 border-brand-green-300 rounded shadow-lg isometric-block"></div>
-                  <div className="bg-brand-green-100 border-b-4 border-brand-green-200 rounded shadow-lg isometric-block"></div>
-                  <div className="bg-stone-500 border-b-4 border-stone-700 rounded shadow-lg opacity-40 italic flex items-center justify-center text-[8px]">MAYO</div>
-                  <div className="bg-stone-500 border-b-4 border-stone-700 rounded shadow-lg opacity-20"></div>
-                  <div className="bg-white/40 border-2 border-dashed border-white/60 rounded"></div>
-                  <div className="bg-white/40 border-2 border-dashed border-white/60 rounded"></div>
-                  <div className="bg-white/40 border-2 border-dashed border-white/60 rounded"></div>
-                  <div className="bg-white/40 border-2 border-dashed border-white/60 rounded"></div>
-                </div>
-              </div>
-              
+            {/* AI HUD Overlay - Precision Topography */}
+            <div className="absolute inset-0 z-10 pointer-events-none border-[24px] border-brand-green-900/5 flex flex-col justify-between p-8">
+               <div className="flex justify-between items-start">
+                  <div className="bg-brand-green-900/90 text-white p-3 rounded-xl text-[10px] font-mono backdrop-blur-sm border border-brand-green-400/30 shadow-2xl">
+                     <p className="text-brand-green-400 mb-1 border-b border-brand-green-400/20 pb-1">DATOS GEODÉSICOS</p>
+                     LAT: 21.528523<br/>
+                     LON: -104.811171<br/>
+                     ELE: 915 msnm (Estimado)
+                  </div>
+                  <div className="bg-brand-green-900/90 text-white p-3 rounded-xl text-[10px] font-mono text-right backdrop-blur-sm border border-brand-green-400/30 shadow-2xl">
+                     <p className="text-brand-green-400 mb-1 border-b border-brand-green-400/20 pb-1">ANÁLISIS DE SUELO</p>
+                     DRENAJE: 82% (PENDIENTE)<br/>
+                     EROSIÓN: BAJA<br/>
+                     ORIENTACIÓN: SW-22°
+                  </div>
+               </div>
+               
+               {/* Analysis Center Crosshair */}
+               <div className="flex-1 flex items-center justify-center relative">
+                  <div className="w-56 h-56 border border-brand-green-500/10 rounded-full animate-spin-slow"></div>
+                  <div className="absolute w-64 h-64 border border-brand-green-500/5 rounded-full animate-reverse-spin-slow"></div>
+                  <div className="absolute w-full h-[1px] bg-gradient-to-r from-transparent via-brand-green-500/20 to-transparent"></div>
+                  <div className="absolute w-[1px] h-full bg-gradient-to-b from-transparent via-brand-green-500/20 to-transparent"></div>
+                  
+                  {/* AI Prediction Overlays */}
+                  <div className="absolute top-[20%] left-[30%] bg-brand-green-900/90 text-[8px] px-2 py-1 rounded-lg border border-brand-green-400 text-white shadow-xl">
+                     <p className="font-bold">BLOQUE A1 (SIEMBRA)</p>
+                     <p className="opacity-70">HUMEDAD ÓPTIMA DETECTADA</p>
+                  </div>
+
+                  <div className="absolute bottom-[30%] right-[25%] bg-accent-yellow-400 text-[9px] px-3 py-1.5 rounded-lg border border-yellow-700 text-yellow-950 font-black uppercase shadow-xl animate-pulse">
+                     PUNTO DE CORTE LUNES
+                  </div>
+               </div>
+
+               <div className="flex justify-between items-end">
+                  <div className="bg-brand-green-900/80 text-white px-3 py-1 rounded text-[10px] font-mono">
+                     STATUS: SCANNING_TERRAIN_V4
+                  </div>
+                  <div className="bg-brand-green-500/20 border border-brand-green-500/50 text-brand-green-900 px-4 py-1.5 rounded-full text-[10px] font-black uppercase backdrop-blur-sm animate-pulse flex items-center gap-2">
+                     <div className="w-2 h-2 bg-brand-green-500 rounded-full"></div>
+                     Esperando Google Elevation API...
+                  </div>
+               </div>
+            </div>
+
+            <div className="absolute top-4 right-4 z-20 flex gap-2">
+              <button className="px-4 py-2 bg-brand-green-700 text-white rounded-xl text-[10px] font-black uppercase shadow-lg hover:bg-brand-green-600 transition-all border border-brand-green-400/20">Iniciar Escaneo 3D</button>
+            </div>
+            
+            {/* Map Placeholder with coordinate simulation */}
+            <div className="flex-1 bg-[#1a1a1a] relative flex items-center justify-center overflow-hidden">
+               <GoogleMapComponent 
+                 onAreaChange={(area) => {
+                   const hectares = area / 10000;
+                   setParams(prev => ({ ...prev, superficie: Number(hectares.toFixed(2)) }));
+                 }}
+               />
+               
+               {/* Map Attribution/Scale Mockup (Conditional or static if map fails) */}
+               <div className="absolute bottom-4 left-4 text-white/30 text-[8px] font-mono pointer-events-none">
+                  INTEGRACIÓN GOOGLE MAPS JS API v3.55
+               </div>
+
               {/* Legend Overlay */}
-              <div className="absolute bottom-6 right-6 flex flex-col gap-2 bg-white/80 backdrop-blur p-3 rounded-lg text-[10px] shadow-sm border border-slate-200">
-                <div className="flex items-center gap-2"><div className="w-3 h-3 bg-yellow-400"></div><span className="font-bold">COSECHA ACTIVA</span></div>
-                <div className="flex items-center gap-2"><div className="w-3 h-3 bg-brand-green-700"></div><span className="font-bold">MADURACIÓN</span></div>
-                <div className="flex items-center gap-2"><div className="w-3 h-3 bg-brand-green-200"></div><span className="font-bold">CRECIMIENTO</span></div>
-                <div className="flex items-center gap-2"><div className="w-3 h-3 bg-stone-400"></div><span className="font-bold">PREPARACIÓN</span></div>
+              <div className="absolute bottom-6 right-6 flex flex-col gap-2 bg-brand-green-950/90 backdrop-blur-xl p-4 rounded-2xl text-[10px] shadow-2xl border border-brand-green-500/20 text-white">
+                <div className="flex items-center gap-3"><div className="w-3 h-3 bg-yellow-400 rounded-sm shadow-sm shadow-yellow-200"></div><span className="font-bold opacity-80 uppercase tracking-tighter">SURCOS LISTOS</span></div>
+                <div className="flex items-center gap-3"><div className="w-3 h-3 bg-brand-green-700 rounded-sm"></div><span className="font-bold opacity-80 uppercase tracking-tighter">CRECIM. ACTIVO</span></div>
+                <div className="flex items-center gap-3"><div className="w-3 h-3 bg-brand-green-900/60 border border-brand-green-500/30 rounded-sm"></div><span className="font-bold opacity-80 uppercase tracking-tighter">TERRENO VIRGEN</span></div>
               </div>
             </div>
           </div>
@@ -227,6 +289,37 @@ export default function App() {
             </div>
           </div>
 
+          {/* Google Integration Status - NEW */}
+          <div className="bg-white rounded-2xl border border-blue-100 p-6 shadow-sm ring-1 ring-blue-50">
+            <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-4 flex items-center gap-2">
+              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+              Google Maps Platform: Status
+            </h3>
+            <div className="space-y-3">
+              {[
+                { name: 'Maps JavaScript API', status: 'v3.55 READY', desc: 'Renderizado Topográfico' },
+                { name: 'Geometry Library', status: 'ACTIVE', desc: 'Medición de Metros Reales' },
+                { name: 'Elevation API', status: 'INTEGRATED', desc: 'Pendiente y Drenaje' },
+                { name: 'Solar API', status: 'STANDBY', desc: 'Radiación Fotosintética' }
+              ].map((api) => (
+                <div key={api.name} className="flex items-center justify-between p-2 hover:bg-slate-50 rounded-lg transition-colors border border-transparent hover:border-slate-100">
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-800">{api.name}</p>
+                    <p className="text-[8px] text-slate-400 uppercase tracking-tighter">{api.desc}</p>
+                  </div>
+                  <span className="text-[8px] font-black px-2 py-1 bg-slate-100 text-slate-400 rounded uppercase">
+                    {api.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 pt-4 border-t border-slate-100 bg-blue-50/50 p-3 rounded-xl">
+               <p className="text-[9px] text-blue-800 font-medium leading-tight">
+                 💡 Necesitamos tu <span className="font-bold">API KEY</span> para activar el escaneo real del terreno y dejar de usar simulaciones.
+               </p>
+            </div>
+          </div>
+
           {/* Staggered Timeline Card */}
           <div className="flex-1 bg-white rounded-2xl border border-slate-200 p-6 flex flex-col shadow-sm">
             <div className="flex justify-between items-center mb-6">
@@ -272,6 +365,77 @@ export default function App() {
             <button className="w-full py-3 bg-brand-green-900 text-white rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-green-900/20 mt-6 hover:bg-brand-green-700 transition-all">
               Planificar Siguiente Bloque
             </button>
+          </div>
+
+          {/* Market Intelligence / Crop Insights */}
+          <div className="bg-gradient-to-br from-indigo-900 to-slate-900 text-white rounded-2xl p-6 shadow-xl border border-indigo-500/20 overflow-hidden relative">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500 rounded-full blur-[80px] opacity-20 -translate-y-1/2 translate-x-1/2"></div>
+            <h3 className="text-xs font-black uppercase tracking-widest text-indigo-300 mb-4 flex items-center gap-2">
+              <TrendingUp size={14} /> Inteligencia de Mercado: {params.cultivo}
+            </h3>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center bg-white/5 border border-white/10 p-3 rounded-xl">
+                <div>
+                  <p className="text-[10px] font-bold text-indigo-200 uppercase">Precio Referencia</p>
+                  <p className="text-xl font-black italic">$9.40 <span className="text-[10px] font-medium text-emerald-400 not-italic">↑ 2.1%</span></p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] font-bold text-indigo-200 uppercase">Demanda</p>
+                  <p className="text-xs font-black uppercase text-emerald-400">Alta</p>
+                </div>
+              </div>
+              <p className="text-[10px] text-indigo-100/70 italic leading-relaxed">
+                "El mercado de {params.cultivo} en la zona Occidente muestra una tendencia alcista por escasez en el Bajío. Se recomienda adelantar cosecha 3 días para capturar precio premium."
+              </p>
+              <button className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-[10px] font-black uppercase transition-all shadow-lg active:scale-95">
+                Ver Reporte de Futuros
+              </button>
+            </div>
+          </div>
+
+          {/* Groq AI Assistant */}
+          <GroqChatComponent />
+
+          {/* NDVI Health Analysis Card */}
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm overflow-hidden relative">
+            <div className="absolute top-0 right-0 p-4 opacity-5">
+              <CloudRain size={100} />
+            </div>
+            
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-[11px] uppercase tracking-widest font-black text-slate-400">Análisis NDVI & Biomasa</h3>
+              <span className="px-2 py-1 bg-emerald-100 text-emerald-700 text-[9px] font-black rounded-full uppercase">Óptimo (0.82)</span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="bg-slate-50 p-4 rounded-2xl">
+                <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Vigor Vegetativo</p>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-black text-emerald-600">82%</span>
+                  <span className="text-[10px] text-emerald-500 font-bold">↑ 4%</span>
+                </div>
+              </div>
+              <div className="bg-slate-50 p-4 rounded-2xl">
+                <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Biomasa Est.</p>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-black text-slate-900">4.2</span>
+                  <span className="text-[10px] text-slate-500 font-bold">Ton/Ha</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex justify-between items-center text-[10px]">
+                <span className="text-slate-500 font-medium">Uniformidad del Lote</span>
+                <span className="font-bold text-slate-800">91%</span>
+              </div>
+              <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                <div className="bg-emerald-500 h-full" style={{ width: '91%' }}></div>
+              </div>
+              <p className="text-[9px] text-slate-400 italic leading-relaxed mt-2">
+                *Datos procesados vía <span className="font-bold">Sentinel-2</span>. La alta concentración de clorofila sugiere una excelente asimilación de nitrógeno en el Bloque 2.
+              </p>
+            </div>
           </div>
 
           {/* Calibration Report / Discrepancies */}

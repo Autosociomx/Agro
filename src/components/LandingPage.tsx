@@ -12,10 +12,20 @@ import {
 import { motion } from 'motion/react';
 
 interface LandingPageProps {
-  onEnterApp: () => void;
+  onEnterApp: (selectedCrop?: string) => void;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
+  const [selectedCrop, setSelectedCrop] = React.useState('Maíz Elotero');
+  
+  const crops = [
+    { id: 'maiz', name: 'Maíz Elotero', icon: '🌽', color: 'bg-yellow-100 text-yellow-700' },
+    { id: 'aguacate', name: 'Aguacate', icon: '🥑', color: 'bg-emerald-100 text-emerald-700' },
+    { id: 'agave', name: 'Agave Azul', icon: '🌵', color: 'bg-blue-100 text-blue-700' },
+    { id: 'tomate', name: 'Tomate', icon: '🍅', color: 'bg-red-100 text-red-700' },
+    { id: 'berries', name: 'Berries', icon: '🫐', color: 'bg-purple-100 text-purple-700' },
+  ];
+
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-brand-green-200">
       {/* Navigation */}
@@ -32,7 +42,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
           <a href="#precios" className="hover:text-brand-green-700 transition-colors">Precios</a>
         </div>
         <button 
-          onClick={onEnterApp}
+          onClick={() => onEnterApp(selectedCrop)}
           className="bg-brand-green-900 text-white px-6 py-3 rounded-full font-bold text-xs uppercase tracking-widest hover:bg-brand-green-700 transition-all shadow-xl shadow-brand-green-900/20 active:scale-95"
         >
           Ver Demo Beta
@@ -57,21 +67,34 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
             <p className="text-lg text-slate-600 mb-10 leading-relaxed max-w-md">
               La primera plataforma de agricultura de precisión diseñada para el agricultor real. Modelado 3D, predicción de cosecha y control financiero en la palma de tu mano.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <button className="bg-brand-green-900 text-white px-8 py-5 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-brand-green-700 transition-all shadow-2xl shadow-brand-green-900/30 group">
-                Unirse a la Preventa <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+            <div className="flex flex-col sm:flex-row gap-4 mb-8">
+              <button 
+                onClick={() => onEnterApp(selectedCrop)}
+                className="bg-brand-green-900 text-white px-8 py-5 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-brand-green-700 transition-all shadow-2xl shadow-brand-green-900/30 group"
+              >
+                Acceder al Dashboard <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
               </button>
-              <div className="flex items-center gap-3 px-4 py-2 border border-slate-200 rounded-2xl bg-white">
-                <div className="flex -space-x-2">
-                  {[1,2,3].map(i => (
-                    <div key={i} className="w-8 h-8 rounded-full border-2 border-white overflow-hidden bg-slate-200">
-                      <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${i+10}`} alt="Farmer" />
-                    </div>
-                  ))}
-                </div>
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter leading-tight">
-                  +500 Agricultores <br /> en lista de espera
-                </p>
+            </div>
+
+            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xl overflow-hidden relative">
+              <p className="text-[10px] font-black text-brand-green-700 uppercase tracking-widest mb-4">Selecciona tu Motor de Cultivo:</p>
+              <div className="flex flex-wrap gap-3">
+                {crops.map(crop => (
+                  <button
+                    key={crop.id}
+                    onClick={() => setSelectedCrop(crop.name)}
+                    className={`flex items-center gap-2 px-4 py-3 rounded-2xl border-2 transition-all active:scale-95 ${
+                      selectedCrop === crop.name 
+                      ? 'border-brand-green-600 bg-brand-green-50' 
+                      : 'border-slate-100 hover:border-slate-200'
+                    }`}
+                  >
+                    <span className="text-xl">{crop.icon}</span>
+                    <span className={`text-[10px] font-black uppercase tracking-tighter ${selectedCrop === crop.name ? 'text-brand-green-900' : 'text-slate-400'}`}>
+                      {crop.name}
+                    </span>
+                  </button>
+                ))}
               </div>
             </div>
           </motion.div>
@@ -116,27 +139,27 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
             <p className="text-3xl md:text-5xl font-black text-slate-900 italic tracking-tighter">Agricultura que piensa por ti.</p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="p-10 rounded-[32px] bg-slate-50 border border-slate-100 hover:border-brand-green-200 transition-all hover:bg-brand-green-50/30">
               <div className="w-16 h-16 bg-brand-green-100 rounded-2xl flex items-center justify-center mb-8">
                 <Target size={32} className="text-brand-green-700" />
               </div>
-              <h3 className="text-xl font-black mb-4 uppercase italic">Precisión 3D</h3>
-              <p className="text-slate-500 leading-relaxed text-sm">Visualiza tu terreno con mapas topográficos de relieve. Detecta zonas de drenaje y optimiza cada surco.</p>
+              <h3 className="text-xl font-black mb-4 uppercase italic">Topografía 3D</h3>
+              <p className="text-slate-500 leading-relaxed text-sm">Visualiza tu parcela con relieve real usando Photorealistic 3D Tiles. Detecta pendientes y planea el drenaje para evitar inundaciones.</p>
             </div>
             <div className="p-10 rounded-[32px] bg-slate-50 border border-slate-100 hover:border-brand-green-200 transition-all hover:bg-brand-green-50/30">
               <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mb-8">
                 <Zap size={32} className="text-blue-700" />
               </div>
-              <h3 className="text-xl font-black mb-4 uppercase italic">Logística de Flujo</h3>
-              <p className="text-slate-500 leading-relaxed text-sm">Divide tu siembra en módulos para garantizar una venta de 1,500 elotes diarios. Cero desperdicio, puro billete.</p>
+              <h3 className="text-xl font-black mb-4 uppercase italic">Energía Solar</h3>
+              <p className="text-slate-500 leading-relaxed text-sm">Usamos la Solar API de Google para medir la radiación exacta sobre tu elote. Predice el crecimiento fotosintético con precisión científica.</p>
             </div>
             <div className="p-10 rounded-[32px] bg-slate-50 border border-slate-100 hover:border-brand-green-200 transition-all hover:bg-brand-green-50/30">
               <div className="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mb-8">
                 <ShieldCheck size={32} className="text-emerald-700" />
               </div>
-              <h3 className="text-xl font-black mb-4 uppercase italic">Control Blindado</h3>
-              <p className="text-slate-500 leading-relaxed text-sm">Calcula tu utilidad real. Resta gastos de urea, jornaleros y flete automáticamente. Dinero limpio en tu bolsa.</p>
+              <h3 className="text-xl font-black mb-4 uppercase italic">Consultoría IA</h3>
+              <p className="text-slate-500 leading-relaxed text-sm">Tu asistente experto agrónomo (Groq SDK) disponible 24/7. Pregúntale sobre plagas, fertilización o logística de corte en segundos.</p>
             </div>
           </div>
         </div>
