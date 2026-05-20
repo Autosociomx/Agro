@@ -10,6 +10,7 @@ import {
   Users
 } from 'lucide-react';
 import { motion } from 'motion/react';
+import { GoogleMapComponent } from './GoogleMapComponent';
 
 interface LandingPageProps {
   onEnterApp: (selectedCrop?: string) => void;
@@ -19,11 +20,26 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
   const [selectedCrop, setSelectedCrop] = React.useState('Maíz Elotero');
   
   const crops = [
-    { id: 'maiz', name: 'Maíz Elotero', icon: '🌽', color: 'bg-yellow-100 text-yellow-700' },
-    { id: 'aguacate', name: 'Aguacate', icon: '🥑', color: 'bg-emerald-100 text-emerald-700' },
-    { id: 'agave', name: 'Agave Azul', icon: '🌵', color: 'bg-blue-100 text-blue-700' },
-    { id: 'tomate', name: 'Tomate', icon: '🍅', color: 'bg-red-100 text-red-700' },
-    { id: 'berries', name: 'Berries', icon: '🫐', color: 'bg-purple-100 text-purple-700' },
+    { id: 'maiz', name: 'Maíz Elotero', icon: '🌽', color: 'bg-yellow-100' },
+    { id: 'aguacate', name: 'Aguacate', icon: '🥑', color: 'bg-emerald-100' },
+    { id: 'agave', name: 'Agave Azul', icon: '🌵', color: 'bg-blue-100' },
+    { id: 'tomate', name: 'Tomate', icon: '🍅', color: 'bg-red-100' },
+    { id: 'berries', name: 'Berries', icon: '🫐', color: 'bg-purple-100' },
+    { id: 'limon', name: 'Limón', icon: '🍋', color: 'bg-lime-100' },
+    { id: 'mango', name: 'Mango', icon: '🥭', color: 'bg-orange-100' },
+    { id: 'chile', name: 'Chile', icon: '🌶️', color: 'bg-red-200' },
+    { id: 'cafe', name: 'Café', icon: '☕', color: 'bg-amber-800/10' },
+    { id: 'cana', name: 'Caña de Azúcar', icon: '🎋', color: 'bg-green-100' },
+    { id: 'sorgo', name: 'Sorgo', icon: '🌾', color: 'bg-yellow-200' },
+    { id: 'soya', name: 'Soya', icon: '🌱', color: 'bg-green-200' },
+    { id: 'almendra', name: 'Almendra', icon: '🌰', color: 'bg-amber-100' },
+    { id: 'nuez', name: 'Nuez', icon: '🥜', color: 'bg-brown-100' },
+    { id: 'cacao', name: 'Cacao', icon: '🍫', color: 'bg-orange-200' },
+    { id: 'uva', name: 'Uva de Mesa', icon: '🍇', color: 'bg-purple-200' },
+    { id: 'platano', name: 'Plátano', icon: '🍌', color: 'bg-yellow-100' },
+    { id: 'esparrago', name: 'Espárrago', icon: '🌿', color: 'bg-emerald-200' },
+    { id: 'cereza', name: 'Cereza', icon: '🍒', color: 'bg-red-100' },
+    { id: 'papaya', name: 'Papaya', icon: '🍈', color: 'bg-orange-100' },
   ];
 
   return (
@@ -99,33 +115,35 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
             </div>
           </motion.div>
 
-          {/* Visual Asset / Mockup */}
+          {/* Visual Asset / Mockup -> Live Demo */}
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.2 }}
             className="relative"
           >
-            <div className="relative z-10 bg-white p-4 rounded-[40px] shadow-2xl border border-slate-200 rotate-2 hover:rotate-0 transition-transform duration-500">
-               <div className="bg-slate-100 rounded-[30px] aspect-video flex items-center justify-center overflow-hidden relative">
-                  {/* Mock of the 3D grid */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-brand-green-100 to-slate-200 flex items-center justify-center">
-                    <div className="w-64 h-32 bg-brand-green-700/20 rounded-xl isometric-field rotate-12 scale-150 opacity-40"></div>
+            <div className="relative z-10 bg-white p-4 rounded-[40px] shadow-2xl border border-brand-green-200 transition-transform duration-500 overflow-hidden">
+               <div className="bg-slate-100 rounded-[30px] aspect-[4/3] w-full flex items-center justify-center overflow-hidden relative">
+                  <div className="absolute inset-0">
+                    <GoogleMapComponent />
                   </div>
-                  <div className="relative z-10 text-center">
-                     <p className="text-4xl font-black text-brand-green-900 italic tracking-tighter mb-1">76,176</p>
-                     <p className="text-[10px] font-bold text-brand-green-700 uppercase tracking-widest">Elotes Proyectados</p>
+                  {/* Floating Overlay for the Demo */}
+                  <div className="absolute bottom-4 left-4 z-20 pointer-events-none">
+                    <div className="bg-slate-900/80 backdrop-blur-md text-white p-3 rounded-2xl border border-white/10 shadow-xl">
+                       <p className="text-xl font-black italic tracking-tighter mb-0.5">Live Demo</p>
+                       <p className="text-[9px] font-bold text-brand-green-400 uppercase tracking-widest">Interactúa con el lote en tiempo real</p>
+                    </div>
                   </div>
                </div>
             </div>
             {/* Floating Badges */}
-            <div className="absolute -top-10 -right-10 bg-yellow-400 p-6 rounded-3xl shadow-xl -rotate-6 z-20">
+            <div className="absolute -top-10 -right-10 bg-yellow-400 p-6 rounded-3xl shadow-xl -rotate-6 z-20 pointer-events-none hidden md:block">
                <span className="text-3xl">🌽</span>
                <p className="text-xs font-black text-yellow-900 mt-2 uppercase tracking-tighter">ROI 85%</p>
             </div>
-            <div className="absolute -bottom-10 -left-10 bg-brand-green-900 p-6 rounded-3xl shadow-xl rotate-6 z-20 text-white">
+            <div className="absolute -bottom-10 -left-10 bg-brand-green-900 p-6 rounded-3xl shadow-xl rotate-6 z-20 text-white pointer-events-none hidden md:block">
                <CloudRain className="text-brand-green-300 mb-2" />
-               <p className="text-[10px] font-bold uppercase tracking-widest">Factor Lluvia Tepic Enabled</p>
+               <p className="text-[10px] font-bold uppercase tracking-widest">Factor Lluvia Enabled</p>
             </div>
           </motion.div>
         </div>

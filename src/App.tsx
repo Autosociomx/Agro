@@ -14,7 +14,7 @@ import {
   Settings
 } from 'lucide-react';
 import { motion } from 'motion/react';
-import { calculateQuimiasX, AgroParams } from './logic/agroEngine';
+import { calculateQuimiasX, AgroParams, CROP_CONFIGS } from './logic/agroEngine';
 import { LandingPage } from './components/LandingPage';
 import { GoogleMapComponent } from './components/GoogleMapComponent';
 import { GroqChatComponent } from './components/GroqChatComponent';
@@ -367,6 +367,44 @@ export default function App() {
             </button>
           </div>
 
+          {/* Satelite & Topography Integration (WAPOR / GEE) */}
+          <div className="bg-white rounded-2xl p-6 shadow-xl border border-blue-100 ring-1 ring-blue-50/50 relative overflow-hidden">
+             <div className="absolute top-0 right-0 p-4 opacity-5">
+               <CloudRain size={100} />
+             </div>
+            <h3 className="text-[11px] uppercase tracking-widest font-black text-brand-green-900 mb-4 flex items-center gap-2">
+              <CloudRain size={16} /> Telemetría: WAPOR & Google 3D
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Evapotranspiration */}
+              <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100 relative">
+                <p className="text-[9px] font-bold text-blue-800 uppercase tracking-widest mb-1">Evapotranspiración (ETa)</p>
+                <div className="flex items-end gap-2 mb-2">
+                  <span className="text-2xl font-black text-blue-900">4.8</span>
+                  <span className="text-[10px] font-bold text-blue-700 pb-1">mm/día</span>
+                </div>
+                <p className="text-[9px] text-blue-800/80 leading-relaxed">
+                  FAO WAPOR. 
+                  <span className="block font-bold mt-1 text-blue-700">Acción: Riego de 1.5 hs al oeste.</span>
+                </p>
+              </div>
+
+              {/* 3D Topography */}
+              <div className="bg-amber-50/50 p-4 rounded-xl border border-amber-100 relative">
+                <p className="text-[9px] font-bold text-amber-800 uppercase tracking-widest mb-1">Inclinación 3D</p>
+                <div className="flex items-end gap-2 mb-2">
+                  <span className="text-2xl font-black text-amber-900">12°</span>
+                  <span className="text-[10px] font-bold text-amber-700 pb-1">Pendiente</span>
+                </div>
+                <p className="text-[9px] text-amber-800/80 leading-relaxed">
+                  GEE Model. Escurrimiento Sur.
+                  <span className="block font-bold mt-1 text-amber-700">Acción: Fertirriego focal.</span>
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Market Intelligence / Crop Insights */}
           <div className="bg-gradient-to-br from-indigo-900 to-slate-900 text-white rounded-2xl p-6 shadow-xl border border-indigo-500/20 overflow-hidden relative">
             <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500 rounded-full blur-[80px] opacity-20 -translate-y-1/2 translate-x-1/2"></div>
@@ -377,15 +415,22 @@ export default function App() {
               <div className="flex justify-between items-center bg-white/5 border border-white/10 p-3 rounded-xl">
                 <div>
                   <p className="text-[10px] font-bold text-indigo-200 uppercase">Precio Referencia</p>
-                  <p className="text-xl font-black italic">$9.40 <span className="text-[10px] font-medium text-emerald-400 not-italic">↑ 2.1%</span></p>
+                  <p className="text-xl font-black italic">
+                    ${(CROP_CONFIGS[params.cultivo as string] || CROP_CONFIGS['Maíz Elotero']).price.toFixed(2)} 
+                    <span className="text-[10px] font-medium text-emerald-400 not-italic ml-2">
+                      {(CROP_CONFIGS[params.cultivo as string] || CROP_CONFIGS['Maíz Elotero']).trend}
+                    </span>
+                  </p>
                 </div>
                 <div className="text-right">
                   <p className="text-[10px] font-bold text-indigo-200 uppercase">Demanda</p>
-                  <p className="text-xs font-black uppercase text-emerald-400">Alta</p>
+                  <p className="text-xs font-black uppercase text-emerald-400">
+                    {(CROP_CONFIGS[params.cultivo as string] || CROP_CONFIGS['Maíz Elotero']).status}
+                  </p>
                 </div>
               </div>
               <p className="text-[10px] text-indigo-100/70 italic leading-relaxed">
-                "El mercado de {params.cultivo} en la zona Occidente muestra una tendencia alcista por escasez en el Bajío. Se recomienda adelantar cosecha 3 días para capturar precio premium."
+                {(CROP_CONFIGS[params.cultivo as string] || CROP_CONFIGS['Maíz Elotero']).insight}
               </p>
               <button className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-[10px] font-black uppercase transition-all shadow-lg active:scale-95">
                 Ver Reporte de Futuros
@@ -404,21 +449,27 @@ export default function App() {
             
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-[11px] uppercase tracking-widest font-black text-slate-400">Análisis NDVI & Biomasa</h3>
-              <span className="px-2 py-1 bg-emerald-100 text-emerald-700 text-[9px] font-black rounded-full uppercase">Óptimo (0.82)</span>
+              <span className="px-2 py-1 bg-emerald-100 text-emerald-700 text-[9px] font-black rounded-full uppercase">
+                {(CROP_CONFIGS[params.cultivo as string] || CROP_CONFIGS['Maíz Elotero']).status} ({(CROP_CONFIGS[params.cultivo as string] || CROP_CONFIGS['Maíz Elotero']).ndvi})
+              </span>
             </div>
 
             <div className="grid grid-cols-2 gap-4 mb-6">
               <div className="bg-slate-50 p-4 rounded-2xl">
                 <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Vigor Vegetativo</p>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-black text-emerald-600">82%</span>
+                  <span className="text-2xl font-black text-emerald-600">
+                    {Math.round((CROP_CONFIGS[params.cultivo as string] || CROP_CONFIGS['Maíz Elotero']).ndvi * 100)}%
+                  </span>
                   <span className="text-[10px] text-emerald-500 font-bold">↑ 4%</span>
                 </div>
               </div>
               <div className="bg-slate-50 p-4 rounded-2xl">
                 <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Biomasa Est.</p>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-black text-slate-900">4.2</span>
+                  <span className="text-2xl font-black text-slate-900">
+                    {(CROP_CONFIGS[params.cultivo as string] || CROP_CONFIGS['Maíz Elotero']).yield}
+                  </span>
                   <span className="text-[10px] text-slate-500 font-bold">Ton/Ha</span>
                 </div>
               </div>
@@ -433,7 +484,7 @@ export default function App() {
                 <div className="bg-emerald-500 h-full" style={{ width: '91%' }}></div>
               </div>
               <p className="text-[9px] text-slate-400 italic leading-relaxed mt-2">
-                *Datos procesados vía <span className="font-bold">Sentinel-2</span>. La alta concentración de clorofila sugiere una excelente asimilación de nitrógeno en el Bloque 2.
+                *Datos procesados vía <span className="font-bold">Sentinel-2</span>. La alta concentración de clorofila sugiere una excelente asimilación de nitrógeno en el sector norte.
               </p>
             </div>
           </div>
