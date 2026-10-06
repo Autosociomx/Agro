@@ -17,6 +17,11 @@ curl "http://localhost:8000/recomendar?lat=21.5044&lon=-104.8945"
 pytest
 ```
 
+## Motor de ventana comercial
+`db/schema.sql` incluye la tabla maestra `crop_market_calendar_mexico` (cultivo, origen, mes, destino, precio, flete, margen, ventana, capacidad, evidencia).
+`src/engine/market_window.py` calcula margen por kg/viaje (merma, comisión, flete), clasifica cada mes (verde/amarillo/rojo), detecta ventanas y avisa si el volumen planeado satura el mercado.
+Falta: cargar los datos de estacionalidad SIAP y precios SNIIM en esa tabla.
+
 ## Estado
 - ☑ v0.1 Esquema de BD + carga de suelos INEGI
 - ☐ v0.2 Ingesta SIAP (tablas `municipios`, `produccion`, `cultivos_requerimientos` aún sin datos)
