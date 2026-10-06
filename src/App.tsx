@@ -19,6 +19,7 @@ import { LandingPage } from './components/LandingPage';
 import { GoogleMapComponent } from './components/GoogleMapComponent';
 import { GroqChatComponent } from './components/GroqChatComponent';
 import { ApiSettings } from './components/ApiSettings';
+import { PlanificadorSiembra } from './components/PlanificadorSiembra';
 
 const INITIAL_PARAMS: AgroParams = {
   cicloDias: 85,
@@ -38,7 +39,7 @@ const INITIAL_PARAMS: AgroParams = {
 };
 
 export default function App() {
-  const [view, setView] = useState<'landing' | 'dashboard'>('landing');
+  const [view, setView] = useState<'landing' | 'dashboard' | 'planner'>('landing');
   const [params, setParams] = useState<AgroParams>({
     ...INITIAL_PARAMS,
     superficie: 0.82, // Default hectáreas based on current Santa Cruz lot
@@ -62,6 +63,10 @@ export default function App() {
   const costDiscrepancy = ((actualValues.totalCosts - prediction.costoTotalBloque) / prediction.costoTotalBloque) * 100;
   const actualROI = (actualProfit / actualValues.totalCosts) * 100;
   const profitMargin = (actualProfit / (actualValues.yieldPerBlock * actualValues.actualPrice)) * 100;
+
+  if (view === 'planner') {
+    return <PlanificadorSiembra onBack={() => setView('dashboard')} />;
+  }
 
   if (view === 'landing') {
     return <LandingPage onEnterApp={(crop) => {
@@ -96,6 +101,12 @@ export default function App() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setView('planner')}
+              className="px-3 h-10 rounded-xl bg-white/10 border border-white/10 text-xs font-bold hover:bg-white/20 transition-colors mr-2"
+            >
+              Calendario de siembra
+            </button>
             <button 
               onClick={() => setIsSettingsOpen(true)}
               className="w-10 h-10 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center hover:bg-white/20 transition-colors mr-2"
